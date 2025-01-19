@@ -1,0 +1,9 @@
+Flask
+Flask-SQLAlchemy
+Flask-Smorest
+flask-restx
+flask_migrate
+Marshmallow
+Werkzeug
+PyJWT
+requests

@@ -1,0 +1,514 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Tunisian Fantasy API",
+    "description": "API for managing fantasy league teams, players, matches, and Twitter sharing.",
+    "version": "1.0.1"
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:5000",
+      "description": "Development server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "readOnly": true },
+          "username": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string", "format": "password", "writeOnly": true },
+          "is_admin": { "type": "boolean", "readOnly": true },
+          "created_at": { "type": "string", "format": "date-time", "readOnly": true },
+          "updated_at": { "type": "string", "format": "date-time", "readOnly": true }
+        }
+      },
+      "FantasyTeam": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "readOnly": true },
+          "user_id": { "type": "integer" },
+          "name": { "type": "string" },
+          "created_at": { "type": "string", "format": "date-time", "readOnly": true },
+          "updated_at": { "type": "string", "format": "date-time", "readOnly": true }
+        }
+      },
+      "Player": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "readOnly": true },
+          "name": { "type": "string" },
+          "position": { "type": "string" },
+          "fantasy_team_id": { "type": "integer" },
+          "created_at": { "type": "string", "format": "date-time", "readOnly": true },
+          "updated_at": { "type": "string", "format": "date-time", "readOnly": true }
+        }
+      },
+      "Match": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "readOnly": true },
+          "home_team": { "type": "string" },
+          "away_team": { "type": "string" },
+          "score": { "type": "string" },
+          "date": { "type": "string", "format": "date-time" },
+          "created_at": { "type": "string", "format": "date-time", "readOnly": true },
+          "updated_at": { "type": "string", "format": "date-time", "readOnly": true }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Register a new user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/User" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User registered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Invalid input" },
+          "409": { "description": "Email already registered" }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Login user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string", "format": "password" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "access_token": { "type": "string" },
+                    "is_admin": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Invalid credentials" }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Refresh access token",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Token refreshed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "access_token": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Invalid refresh token" }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Logout user",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Logout successful" }
+        }
+      }
+    },
+    "/admin/register": {
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Register a new admin (Admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/User" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Admin registered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Invalid input" },
+          "403": { "description": "Admin access required" },
+          "409": { "description": "Email already registered" }
+        }
+      }
+    },
+    "/admin/users": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Get all users (Admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "List of all users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/User" }
+                }
+              }
+            }
+          },
+          "403": { "description": "Admin access required" }
+        }
+      }
+    },
+    "/admin/users/<int:user_id>": {
+      "delete": {
+        "tags": ["Admin"],
+        "summary": "Delete a user (Admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "User deleted successfully" },
+          "403": { "description": "Admin access required" },
+          "404": { "description": "User not found" }
+        }
+      }
+    },
+    "/admin/users/<int:user_id>/make_admin": {
+      "put": {
+        "tags": ["Admin"],
+        "summary": "Make a user an admin (Admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "User is now an admin" },
+          "403": { "description": "Admin access required" },
+          "404": { "description": "User not found" }
+        }
+      }
+    },
+    "/fantasy/create": {
+      "post": {
+        "tags": ["Fantasy Team"],
+        "summary": "Create a new fantasy team",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/FantasyTeam" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Fantasy team created successfully" },
+          "400": { "description": "Invalid input" },
+          "404": { "description": "User not found" }
+        }
+      }
+    },
+    "/fantasy/update/{team_id}": {
+      "put": {
+        "tags": ["Fantasy Team"],
+        "summary": "Update a fantasy team",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "team_name": { "type": "string" },
+                  "points": { "type": "integer" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Fantasy team updated successfully" },
+          "404": { "description": "Fantasy team not found" }
+        }
+      }
+    },
+    "/fantasy/delete/{team_id}": {
+      "delete": {
+        "tags": ["Fantasy Team"],
+        "summary": "Delete a fantasy team",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Fantasy team deleted successfully" },
+          "404": { "description": "Fantasy team not found" }
+        }
+      }
+    },
+    "/player/add": {
+      "post": {
+        "tags": ["Player"],
+        "summary": "Add a player",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Player" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Player added successfully" },
+          "404": { "description": "Fantasy team not found" }
+        }
+      }
+    },
+    "/player/{team_id}/players": {
+      "get": {
+        "tags": ["Player"],
+        "summary": "Get all players in a team",
+        "parameters": [
+          {
+            "name": "team_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Players retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Player" }
+                }
+              }
+            }
+          },
+          "404": { "description": "Fantasy team not found" }
+        }
+      }
+    },
+    "/player/update/{player_id}": {
+      "put": {
+        "tags": ["Player"],
+        "summary": "Update a player's details",
+        "parameters": [
+          {
+            "name": "player_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "position": { "type": "string" },
+                  "goals": { "type": "integer" },
+                  "assists": { "type": "integer" },
+                  "is_captain": { "type": "boolean" },
+                  "fantasy_points": { "type": "integer" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Player updated successfully" },
+          "404": { "description": "Player not found" }
+        }
+      }
+    },
+    "/player/delete/{player_id}": {
+      "delete": {
+        "tags": ["Player"],
+        "summary": "Delete a player",
+        "parameters": [
+          {
+            "name": "player_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Player deleted successfully" },
+          "404": { "description": "Player not found" }
+        }
+      }
+    },
+    "/leaderboard/get": {
+      "get": {
+        "tags": ["Leaderboard"],
+        "summary": "Get fantasy league leaderboard",
+        "responses": {
+          "200": {
+            "description": "Leaderboard retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "team_name": { "type": "string" },
+                      "user_id": { "type": "integer" },
+                      "username": { "type": "string" },
+                      "score": { "type": "integer" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/match/{match_id}": {
+      "get": {
+        "tags": ["Match"],
+        "summary": "Get match details",
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Match details retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Match" }
+              }
+            }
+          },
+          "404": { "description": "Match not found" }
+        }
+      }
+    },
+    "/twitter/share": {
+      "post": {
+        "tags": ["Twitter"],
+        "summary": "Share a message on Twitter",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "message": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {  
+          "200": { "description": "Shared successfully on Twitter" },
+          "400": { "description": "Message content is required" },
+          "403": { "description": "Twitter API error" }
+        }
+      }
+    }
+  }
+}
