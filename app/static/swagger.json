@@ -169,6 +169,7 @@
         }
       }
     },
+
     "/admin/register": {
       "post": {
         "tags": ["Admin"],

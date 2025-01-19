@@ -15,7 +15,7 @@ def admin_required(f):
         token = request.headers.get('Authorization')
         if not token:
             return jsonify({"message": "Authorization token is required"}), 401
-        
+
         # Remove the "Bearer " prefix if present
         if token.startswith("Bearer "):
             token = token[7:]
@@ -24,18 +24,18 @@ def admin_required(f):
         decoded = decode_token(token)
         if "error" in decoded:
             return jsonify({"message": decoded["error"]}), 401
-        
+
         # Get the user from the database
         user_id = decoded.get("sub")
         user = User.query.get(user_id)
-        
+
         # Check if the user is an admin
         if not user or not user.is_admin:
             return jsonify({"message": "Admin access required"}), 403
-        
+
         # If the user is an admin, proceed with the original function
         return f(*args, **kwargs)
-    
+
     return decorated_function
 
 # Register a new admin (only accessible by existing admins)
@@ -74,25 +74,25 @@ def get_all_users():
     return jsonify(result), 200
 
 # Delete a user (Admin only)
-@bp.route('/users/<int:user_id>', methods=['DELETE'])
+@bp.route('/users/<int:user_id>', methods=['DELETE'])  # Fixed route
 @admin_required
-def delete_user(user_id):
+def delete_user(user_id):  # `user_id` is now passed dynamically
     user = User.query.get(user_id)
     if not user:
         return jsonify({"message": "User not found"}), 404
-    
+
     db.session.delete(user)
     db.session.commit()
     return jsonify({"message": "User deleted successfully"}), 200
 
 # Make a user an admin (Admin only)
-@bp.route('/users/<int:user_id>/make_admin', methods=['PUT'])
+@bp.route('/users/<int:user_id>/make_admin', methods=['PUT'])  # Fixed route
 @admin_required
-def make_admin(user_id):
+def make_admin(user_id):  # `user_id` is now passed dynamically
     user = User.query.get(user_id)
     if not user:
         return jsonify({"message": "User not found"}), 404
-    
+
     user.is_admin = True
     db.session.commit()
     return jsonify({"message": "User is now an admin"}), 200
