@@ -65,6 +65,10 @@ The **Tunisian Fantasy API** is a web-based platform designed to empower Tunisia
 - 🚀 **Scalability:** Optimize for high traffic and integrate live match updates.
 - 📱 **Mobile App:** Future goal to expand into a cross-platform application.
 
+## 📄 Research Paper
+You can read the full paper detailing the **Tunisian Fantasy API** project here:  
+[📑 Tunisian Fantasy API Report](https://github.com/becherzribi/Tunisian-Fantasy-API/blob/main/Tunisian_Fantasy_API_Report.pdf)
+
 ## 📥 Setup & Installation
 ### 📌 Prerequisites
 - **Python 3.8+**, Pip, SQLite
@@ -84,9 +88,6 @@ The **Tunisian Fantasy API** is a web-based platform designed to empower Tunisia
    ```
 4. **Access Swagger UI:**
    - Visit: [http://localhost:5000/api/docs](http://localhost:5000/api/docs) to explore endpoints.
-## 📄 Research Paper  
-You can read the full paper detailing the **Tunisian Fantasy API** project here:  
-[📑 Read the Paper](./path-to-your-paper.pdf)  
 
 ## 📩 Contact
 📌 **Becher Zribi**
